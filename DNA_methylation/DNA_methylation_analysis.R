@@ -9,6 +9,15 @@ file.list = list(system.file("extdata", "test1.myCpG.txt", package = "methylKit"
                  system.file("extdata", "control1.myCpG.txt", package = "methylKit"),
                  system.file("extdata", "control2.myCpG.txt", package = "methylKit")
                  )
+myobj = methRead(file.list, 
+                 sample.id = list("test1", "test2", "ctrl1", "ctrl2"),
+                 assembly = "hg18",
+                 treatment = c(1,1,0,0),
+                 context = "CpG",
+                 mincov = 10
+                 )
+
+
 myobjDB = methRead(file.list, 
                  sample.id = list("test1", "test2", "ctrl1", "ctrl2"),
                  assembly = "hg18", 
@@ -96,3 +105,4 @@ diffCpGann = annotateWithFeatureFlank(as(myDiff25p, "GRanges"),
                                       cpg.obj$CpGi, cpg.obj$shores, 
                                       feature.name = "CpGi", flank.name = "shores")
 diffCpGann
+
