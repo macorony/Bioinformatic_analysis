@@ -33,3 +33,29 @@ primary <- c(colnames(met), colnames(exp))
 colname <- c(colnames(met), colnames(exp))
 sampleMap <- data.frame(assay, primary, colname)
 
+distal.probes <- get.feature.probe(
+  genome = "hg19", met.platform = "EPIC"
+)
+
+colData <- DataFrame(primary = colnames(met),
+                     sample = colnames(met))
+
+mae <- createMAE(exp = exp, met = met, save = T, filter.probes = distal.probes, colData = colData,
+                 sampleMap = sampleMap, linearize.exp = T, save.filename = "mae.rda", met.platform = "EPIC", 
+                 genome = "hg19", TCGA = F)
+
+
+# Identifying differentially methylated probes
+
+sig.diff <- get.diff.meth(data = mae, group.col = "definition",
+                          group1 = "Primary solid Tumor",
+                          group2 = "Solid Tissue Normal", 
+                          minSubgroupFrac = 0.2, 
+                          sig.dif = 0.3, 
+                          diff.dir = "hypo", 
+                          cores = 1, 
+                          dir.out = "result", 
+                          pvalue = 0.01
+                          )
+head(sig.diff)
+
