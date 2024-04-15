@@ -70,4 +70,4 @@ sfit <- coxph(Surv(time, status) ~ sex + age + ph.ecog + ph.karno + pat.karno + 
               data=lung)
 
 sfit <- coxph(Surv(time, status) ~ rx, data = colondeath)
-ggsurvplot(sfit, conf.int = F)
+ggsurvplot(sfit, conf.int = F, pval = T, risk.table = T)
