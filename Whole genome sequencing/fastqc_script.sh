@@ -8,9 +8,19 @@ fastqc -o quality_control mini.fastq
 multiqc quality_control
 
 
-#
-# Evol 1
-#
+# De novo assembly
+spades.py -o assembly/spades/ --careful -1 data/evol1_R1.fastq.gz data/evol1_R2.fastq.gz
+
+# BWA index
+bwa index assembly/scaffolds.fasta
+
+# Mapping 
+bwa mem assembly/scaffolds.fasta data/evol1_R1.fastq.gz data/evol1_R2.fastq.gz > mapping/evol1.sam
+
+
+
+
+
 
 # fixmate and compress to bam
 samtools sort -n -O sam mappings/evol1.sam | samtools fixmate -m -O bam - mappings/evol1.fixmate.bam
