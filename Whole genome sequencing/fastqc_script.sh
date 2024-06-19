@@ -41,11 +41,9 @@ rm mappings/evol1.sorted.dedup.bam
 samtools fastq -1 mappings/evol1.sorted.unmapped.R1.fastq.gz -2 mappings/evol1.sorted.unmapped.R2.fastq.gz mappings/evol1.sorted.unmapped.bam
 # delete not needed files
 rm mappings/evol1.sorted.unmapped.bam
-
 #
 # Evol 2
 #
-
 samtools sort -n -O sam mappings/evol2.sam | samtools fixmate -m -O bam - mappings/evol2.fixmate.bam
 rm mappings/evol2.sam
 samtools sort -O bam -o mappings/evol2.sorted.bam mappings/evol2.fixmate.bam
@@ -58,34 +56,31 @@ rm mappings/evol2.sorted.dedup.bam
 
 
 
-# fixmate and compress to bam
-samtools sort -n -O sam mappings/evol1.sam | samtools fixmate -m -O bam - mappings/evol1.fixmate.bam
-rm mappings/evol1.sam
-# sort
-samtools sort -O bam -o mappings/evol1.sorted.bam mappings/evol1.fixmate.bam
-rm mappings/evol1.fixmate.bam
-# mark duplicates
-samtools markdup -r -S mappings/evol1.sorted.bam mappings/evol1.sorted.dedup.bam
-rm mappings/evol1.sorted.bam
-# extract q20 mappers
-samtools view -h -b -q 20 mappings/evol1.sorted.dedup.bam > mappings/evol1.sorted.dedup.q20.bam
-# extract unmapped
-samtools view -b -f 4 mappings/evol1.sorted.dedup.bam > mappings/evol1.sorted.unmapped.bam
-rm mappings/evol1.sorted.dedup.bam
-# covert to fastq
-samtools fastq -1 mappings/evol1.sorted.unmapped.R1.fastq.gz -2 mappings/evol1.sorted.unmapped.R2.fastq.gz mappings/evol1.sorted.unmapped.bam
-# delete not needed files
-rm mappings/evol1.sorted.unmapped.bam
+# index genome
+samtools faidx assembly/scaffolds.fasta
+mkdir variants
+# Evol 1
+# index mappings
+bamtools index -in mappings/evol1.sorted.dedup.q20.bam
+# calling variants
+freebayes -p 1 -f assembly/scaffolds.fasta mappings/evol1.sorted.dedup.q20.bam > variants/evol1.freebayes.vcf
+# compress
+bgzip variants/evol1.freebayes.vcf
+# index
+$ tabix -p vcf variants/evol1.freebayes.vcf.gz
+# filtering
+zcat variants/evol1.freebayes.vcf.gz | vcffilter -f "QUAL > 1 & QUAL / AO > 10 & SAF > 0 & SAR > 0 & RPR > 1 & RPL > 1" | bgzip > variants/evol1.freebayes.filtered.vcf.gz
+tabix -p vcf variants/evol1.freebayes.filtered.vcf.gz
 
-#
 # Evol 2
-#
-
-samtools sort -n -O sam mappings/evol2.sam | samtools fixmate -m -O bam - mappings/evol2.fixmate.bam
-rm mappings/evol2.sam
-samtools sort -O bam -o mappings/evol2.sorted.bam mappings/evol2.fixmate.bam
-rm mappings/evol2.fixmate.bam
-samtools markdup -r -S mappings/evol2.sorted.bam mappings/evol2.sorted.dedup.bam
-rm mappings/evol2.sorted.bam
-samtools view -h -b -q 20 mappings/evol2.sorted.dedup.bam > mappings/evol2.sorted.dedup.q20.bam
-rm mappings/evol2.sorted.dedup.bam
+# index mappings
+bamtools index -in mappings/evol2.sorted.dedup.q20.bam
+# calling variants
+freebayes -p 1 -f assembly/scaffolds.fasta mappings/evol2.sorted.dedup.q20.bam > variants/evol2.freebayes.vcf
+# compress
+bgzip variants/evol2.freebayes.vcf
+# index
+$ tabix -p vcf variants/evol2.freebayes.vcf.gz
+# filtering
+zcat variants/evol2.freebayes.vcf.gz | vcffilter -f "QUAL > 1 & QUAL / AO > 10 & SAF > 0 & SAR > 0 & RPR > 1 & RPL > 1" | bgzip > variants/evol2.freebayes.filtered.vcf.gz
+tabix -p vcf variants/evol2.freebayes.filtered.vcf.gz
