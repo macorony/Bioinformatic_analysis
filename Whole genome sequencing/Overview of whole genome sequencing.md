@@ -14,6 +14,14 @@ The WGS analysis is to identify variants by mapping the short fragment reads to 
 5. Phas/Prephas
 
 [The link](https://frontlinegenomics.com/how-to-ngs-quality-control/)
+
+#### The QC process
+1. Remove Phix sequences (what is PhiX sequence: https://www.illumina.com/products/by-type/sequencing-kits/cluster-gen-sequencing-reagents/phix-control-v3.html)
+
+2. Adapter trimming
+3. Quality trimming of reads
+4. Quality assessment
+
 ### De novo assembly
 De novo genome assembly is a strategy for genome assembly, representing the genome assembly of a novel genome from scratch without the aid of reference genomic data.  
 ### Alignment

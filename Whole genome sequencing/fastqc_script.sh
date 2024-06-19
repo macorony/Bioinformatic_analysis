@@ -2,10 +2,14 @@
 salloc --time=05:00:00 -mem-per-cpu=8G --ntasks=4
 # Creat directory
 mkdir ./WGS_tutorial/quality_control
+
+# Run Fastp
+fastp --detect_adapter_for_pe --overrepresentation_analysis --correction --cut_right --html trimmed/evol1.fastp.html --json trimmed/evol1.fastp.json --thread 2 -i data/evol1_R1.fastq.gz -I data/evol1_R2.fastq.gz -o trimmed/evol1_R1.fastq.gz -O trimmed/evol1_R2.fastq.gz
+fastp --detect_adapter_for_pe --overrepresentation_analysis --correction --cut_right --html trimmed/evol2.fastp.html --json trimmed/evol2.fastp.json --thread 2 -i data/evol2_R1.fastq.gz -I data/evol2_R2.fastq.gz -o trimmed/evol2_R1.fastq.gz -O trimmed/evol2_R2.fastq.gz
 # Run FastQC
-fastqc -o quality_control mini.fastq
+fastqc -o trimmed-fastqc trimmed/*.fastq.gz
 # Run MultiQC
-multiqc quality_control
+multiqc trimmed-fastqc trimmed
 
 
 # De novo assembly
