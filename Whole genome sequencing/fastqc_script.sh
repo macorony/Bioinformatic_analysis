@@ -13,14 +13,14 @@ multiqc trimmed-fastqc trimmed
 
 
 # De novo assembly
-spades.py -o assembly/spades/ --careful -1 data/evol1_R1.fastq.gz data/evol1_R2.fastq.gz
+spades.py -o assembly/spades-trimmed/ --careful -1 data/anc_R1.fastq.gz data/anc_R2.fastq.gz
 
 # BWA index
 bwa index assembly/scaffolds.fasta
 
 # Mapping 
-bwa mem assembly/scaffolds.fasta data/evol1_R1.fastq.gz data/evol1_R2.fastq.gz > mapping/evol1.sam
-
+bwa mem assembly/scaffolds.fasta trimmed/evol1_R1.fastq.gz trimmed/evol1_R2.fastq.gz > mappings/evol1.sam
+bwa mem assembly/scaffolds.fasta trimmed/evol2_R2.fastq.gz trimmed/evol2_R2.fastq.gz > mappings/evol2.sam
 
 
 
