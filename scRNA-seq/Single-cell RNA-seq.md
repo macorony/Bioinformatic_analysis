@@ -1,0 +1,2 @@
+# Single-cell analysis
+Single-cell analysis characterize individual cells, allowing their clustering and characterization in an unsupervised manner. The analysis mainly refers to genomic and transcriptomic analysis. The technique can be applied to exploring cell types within a tissue, identify unknown cell types, gene expression change during differentiation processes and so forth. 
