@@ -13,3 +13,6 @@ _**Resource credit:**_
 1. SMART-seq
 2. SMART-seq2
 3. STRT-seq
+## Generation of count matrix
+1. Alevin
+2. Cell Ranger pipeline
