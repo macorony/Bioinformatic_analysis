@@ -21,6 +21,38 @@ Single-cell analysis characterize individual cells, allowing their clustering an
     2. Gene set enrichment analysis
     3. Compositional analysis
     4. Inferring perturbation effects
+# Sample preparation protocols
+[credit resource] (https://www.singlecellcourse.org/introduction-to-single-cell-rna-seq.html#overview-of-single-cell-rna-seq)
+there are currently a wide diversity of protocols for preparing scRNA-seq data, which can be categorized mainly based on the two most important aspects of cell capture or isolation and transcription quantification.
+1. Cell capture
+    1. microtitre-plate-based
+        1. Cell image and individual cell information before library preparation.
+        2. Low-throughput and considerable amounts of work.
+    2. microfluidic-array-based
+        1. Higher throughput than microtitre-plate-based.
+        2. Not appropriate dealing with rare cell types.
+    3. microfluidic-droplet-based
+        1. The highest throughput. 
+2. Transcript quantification
+There are two types of transcript quantification: full-length and tag-based. The choice of quantification method has important implications for what types of analyses the data can be used for. 
+    1. Full-length
+        1. Restricted to plate-based protocols. 
+        2. Able to detect splice variants.
+    2. Tag-based
+        1. One of the ends (3' or 5') of the transcript is sequenced. 
+        2. Unique molecular identifiers (UMIs) can improve the quantification accuracy.
+        3. Most protocols are tag-based. 
+# Read alignment and quantification in droplet-based scRNA-seq data
+Most scRNA-seq technologies generate read sequences containing three key pieces of information
+1. cDNA fragment
+2. Cell barcode
+3. Unique molecular identifiers
+A classical scRNA-seq workflow contains four main steps:
+1. Mapping the cDNA fragments to a reference
+2. Assigning reads to genes
+3. Assigning reads to cells
+4. Counting the number of UMI
+
 
 
 
