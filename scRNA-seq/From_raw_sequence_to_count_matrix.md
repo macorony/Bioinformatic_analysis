@@ -13,6 +13,10 @@ _**Resource credit:**_
 1. SMART-seq
 2. SMART-seq2
 3. STRT-seq
-## Generation of count matrix
-1. Alevin
-2. Cell Ranger pipeline
+## Generation of count matrix using Alevin
+1. Example data
+```bash
+wget https://cg.10xgenomics.com/samples/cell-exp/2.1.0/pbmc4k/pbmc4k_fastqs.tar
+
+```
+
