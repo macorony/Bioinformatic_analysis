@@ -1,5 +1,4 @@
 # Raw data to count matrix 
-_**Resource credit:**_
 ## Library preparation
 ### Amplification method
 #### Pooled PCR amplification
@@ -39,8 +38,19 @@ bioawk -c gff '$feature=="transcript" {print $group}' <(gunzip -c gencode.v31.pr
 
 Running Alevin
 ```bash
-salmon alevin -lISR -1 fastqs/pbmc4k_S1_L001_R1_001.fastq.gz -2 fastqs/pbmc4k_S1_L001_R2_001.fastq.gz --chromium -i index -p 8 -o alevin_output --tgMap txp2gene.tsv
+salmon alevin -lISR -1 fastqs/pbmc4k_S1_L001_R1_001.fastq.gz -2 fastqs/pbmc4k_S1_L001_R2_001.fastq.gz --chromium -i index -p 8 -o alevin_output1 --tgMap txp2gene.tsv
 ```
+
+```bash
+salmon alevin -lISR -1 fastqs/pbmc4k_S1_L002_R1_001.fastq.gz -2 fastqs/pbmc4k_S1_L002_R2_001.fastq.gz --chromium -i index -p 8 -o alevin_output2 --tgMap txp2gene.tsv
+```
+## About Salmon
+[credit resource] (https://salmon.readthedocs.io/en/latest/salmon.html)
+Salmon is a tool for wicked-fast transcript quantification from RNA-seq data. Salmon supports dual modes in quantification: The mapping-based mode and the alignment-based mode. 
+The mapping-based mode of salmon runs in two phases: indexing and quantification. 
+The alignment-based mode does not require indexing. The quantification only needs a FASTA file of transcripts and a SAM/BAM files containing the alignments. 
+
+
 
 
 
