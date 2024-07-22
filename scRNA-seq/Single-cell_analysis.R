@@ -4,10 +4,14 @@ BiocManager::install("SingleCellExperiment")
 BiocManager::install(c("scuttle", "scran", "scater", "uwot", "rtracklayer"))
 BiocManager::install("DropletUtils")
 BiocManager::install("scater")
+BiocManager::install("scRNAseq")
+BiocManager::install("batchelor")
+BiocManager::install("bluster")
 install.packages("uwot")
 library(uwot)
 library(SingleCellExperiment)
 library(scater)
+library(scuttle)
 
 
 # Reading from tabular formats
@@ -100,3 +104,29 @@ reducedDim(sce, "TSNE")
 u <- uwot::umap(t(logcounts(sce)), n_neighbors = 2)
 reducedDim(sce, "UMAP_UWOT") <- U
 reducedDims(sce)
+
+# workflow example
+library(scRNAseq)
+# Quality control (using mitochondrial genes)
+library(scater)
+sce <- MacoskoRetinaData()
+is.mito <- grepl("^MT-", rownames(sce))
+qcstats <- perCellQCMetrics(sce, subsets = list(Mito=is.mito))
+filtered <- quickPerCellQC(qcstats, percent_subsets = "subsets_Mito_percent")
+sce <- sce[, !filtered$discard]
+# Normalization
+sce <- logNormCounts(sce)
+# Feature selection, blocking on the individual of origin
+library(scran)
+dec <- modelGeneVar(sce)
+hvg <- getTopHVGs(dec, prop=0.1)
+# Batch correction
+library(scater)
+set.seed(1234)
+sce <- runPCA(sce, ncomponents=25, subset_row=hvg)
+library(bluster)
+colLabels(sce) <- clusterCells(sce, use.dimred = "PCA", BLUSPARAM = NNGraphParam(cluster.fun = "louvain"))
+# Visualization
+sce <- runUMAP(sce, dimred = "PCA")
+plotUMAP(sce, colour_by = "label")
+
