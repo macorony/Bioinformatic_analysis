@@ -7,11 +7,13 @@ BiocManager::install("scater")
 BiocManager::install("scRNAseq")
 BiocManager::install("batchelor")
 BiocManager::install("bluster")
+BiocManager::install("ensembldb")
 install.packages("uwot")
 library(uwot)
 library(SingleCellExperiment)
 library(scater)
 library(scuttle)
+library(ensembldb)
 
 
 # Reading from tabular formats
@@ -230,3 +232,59 @@ library(batchelor)
 set.seed(1000)
 corrected <- fastMNN(sce.seger, batch=sce.seger$Donor, subset.row=chosen.hvgs)
 corrected <- runTSNE(corrected, dimred="corrected")
+colLabels(corrected) <- clusterRows(reducedDim(corrected, "corrected"), NNGraphParam())
+tab <- table(Cluster=colLabels(corrected), Donor=corrected$batch)
+tab
+
+gridExtra::grid.arrange(
+  plotTSNE(corrected, colour_by = "label"), 
+  plotTSNE(corrected, colour_by = "batch"),
+  ncol = 2
+)
+
+# Lung single cell analysis (Smart-seq2)
+# Data loading
+library(scRNAseq)
+sce.416b <- LunSpikeInData(which="416b")
+sce.416b$block <- factor(sce.416b$block)
+library(AnnotationHub)
+ah <- AnnotationHub()
+query(ah, c("Mus musculus","Ensembl 98"))
+
+# ens.mm.v97 <- AnnotationHub()[["AH73905"]]
+ens.mm.v98 <- AnnotationHub()[["AH75036"]]
+
+rowData(sce.416b)$ENSEMBL <- rownames(sce.416b) 
+rowData(sce.416b)$SYMBOL <- mapIds(ens.mm.v98, keys=rownames(sce.416b), 
+                                   keytype = "GENEID", column = "SYMBOL")
+rowData(sce.416b)$SEQNAME <- mapIds(ens.mm.v98, keys = rownames(sce.416b), 
+                                    keytype = "GENEID", column = "SEQNAME")
+library(scater)
+length(rowData(sce.416b)$ENSEMBL)
+length(rowData(sce.416b)$SYMBOL)
+rownames(sce.416b) <- uniquifyFeatureNames(rowData(sce.416b)$ENSEMBL, rowData(sce.416b)$SYMBOL)
+# Quality control
+unfiltered <- sce.416b
+
+mito <- which(rowData(sce.416b)$SEQNAME == "MT")
+stats <- perCellQCMetrics(sce.416b, subsets = list(Mt=mito))
+qc <- quickPerCellQC(stats, percent_subsets=c("subsets_Mt_percent", 
+                                              "altexps_ERCC_percent"), batch=sce.416b$block)
+sce.416b <- sce.416b[, !qc$discard]
+
+colData(unfiltered) <- cbind(colData(unfiltered), stats)
+unfiltered$block <- factor(unfiltered$block)
+unfiltered$discard <- qc$discard
+
+gridExtra::grid.arrange(
+  plotColData(unfiltered, x="block", y="sum", 
+              colour_by="discard") + scale_y_log10() + ggtitle("Total count"), 
+  plotColData(unfiltered, x="block", y="detected", 
+              colour_by="discard") + scale_y_log10() + ggtitle("Detected features"), 
+  plotColData(unfiltered, x="block", y="subsets_Mt_percent", 
+              colour_by="discard") + ggtitle("Mito percent"),
+  plotColData(unfiltered, x="block", y="altexps_ERCC_percent", 
+              colour_by="discard") + ggtitle("ERCC percent"),
+  nrow=2,
+  ncol=2
+)
