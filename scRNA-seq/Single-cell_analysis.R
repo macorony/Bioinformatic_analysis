@@ -216,7 +216,17 @@ library(bluster)
 clust.out <- clusterRows(reducedDim(sce.seger, "PCA"), NNGraphParam(), full = T)
 snn.gr <- clust.out$objects$graph
 colLabels(sce.seger) <- clust.out$clusters
+tab <- table(Cluster=colLabels(sce.seger), Donor=sce.seger$Donor)
+library(pheatmap)
+pheatmap(log10(tab+10), color=viridis::viridis(100))
 
+gridExtra::grid.arrange(
+  plotTSNE(sce.seger, colour_by = "label"), 
+  plotTSNE(sce.seger, colour_by = "Donor"), 
+  ncol=2
+)
 
-
-
+library(batchelor)
+set.seed(1000)
+corrected <- fastMNN(sce.seger, batch=sce.seger$Donor, subset.row=chosen.hvgs)
+corrected <- runTSNE(corrected, dimred="corrected")
