@@ -8,6 +8,7 @@ BiocManager::install("scRNAseq")
 BiocManager::install("batchelor")
 BiocManager::install("bluster")
 BiocManager::install("ensembldb")
+BiocManager::install("org.Mm.eg.db")
 install.packages("uwot")
 install.packages("dynamicTreeCut")
 library(uwot)
@@ -355,4 +356,86 @@ top.markers <- rownames(marker.set)[marker.set$Top <= 10]
 plotHeatmap(sce.416b, features = top.markers, order_columns_by = "label", 
             colour_columns_by = c("label", "block", "phenotype"), 
             center=TRUE, symmetric=T, zlim=c(-5, 5))
+
+# Mouse brain cells
+library(scRNAseq)
+sce.zeisel <- ZeiselBrainData()
+library(scater)
+sce.zeisel <- aggregateAcrossFeatures(sce.zeisel, id=sub("_loc[0-9]+$", "", rownames(sce.zeisel)))
+library(org.Mm.eg.db)
+rowData(sce.zeisel)$Ensembl <- mapIds(org.Mm.eg.db, keys=rownames(sce.zeisel), keytype = "SYMBOL", 
+                                      column="ENSEMBL")
+# Quality control
+unfiltered <- sce.zeisel
+stats <- perCellQCMetrics(sce.zeisel, subsets=list(Mt=rowData(sce.zeisel)$featureType=="mito"))
+qc <- quickPerCellQC(stats, percent_subsets=c("altexps_ERCC_percent", "subsets_Mt_percent"))
+sce.zeisel <- sce.zeisel[, !qc$discard]
+colData(unfiltered) <- cbind(colData(unfiltered), stats)
+
+colData(unfiltered) <- cbind(colData(unfiltered), stats)
+unfiltered$discard <- qc$discard
+
+gridExtra::grid.arrange(
+  plotColData(unfiltered, y="sum", colour_by="discard") +
+    scale_y_log10() + ggtitle("Total count"), 
+  plotColData(unfiltered, y="detected", colour_by = "discard") +
+    scale_y_log10() + ggtitle("Detected features"),
+  plotColData(unfiltered, y="altexps_ERCC_percent", colour_by = "discard") + ggtitle("ERCC percent"), 
+  plotColData(unfiltered, y="subsets_Mt_percent", colour_by = "discard") + ggtitle("Mito percent"),
+  ncol = 2            
+)
+
+
+gridExtra::grid.arrange(
+  plotColData(unfiltered, x="sum", y="subsets_Mt_percent", 
+              colour_by = "discard") + scale_x_log10(), 
+  plotColData(unfiltered, x="altexps_ERCC_percent", y="subsets_Mt_percent", colour_by = "discard"),
+  ncol=2
+)
+
+# Normalization
+library(scran)
+set.seed(1000)
+clusters <- quickCluster(sce.zeisel)
+sce.zeisel <- computeSumFactors(sce.zeisel, cluster=clusters)
+sce.zeisel <- logNormCounts(sce.zeisel)
+
+summary(sizeFactors(sce.zeisel))
+
+plot(librarySizeFactors(sce.zeisel), sizeFactors(sce.zeisel), pch=16, 
+     xlab = "Library size factors", ylab = "Deconvolution factors", log="xy")
+# Variance Modeling 
+dec.zeisel <- modelGeneVarWithSpikes(sce.zeisel, "ERCC")
+top.hvgs <- getTopHVGs(dec.zeisel, prop=0.1)
+plot(dec.zeisel$mean, dec.zeisel$total, pch=16, cex=0.5, xlab="Mean of log-expression", 
+     ylab="Variance of log-expression")
+curfit <- metadata(dec.zeisel)
+points(curfit$mean, curfit$var, col="red", pch=16)
+curve(curfit$trend(x), col="dodgerblue", add=T, lwd=2)
+# Dimensionality reduction
+library(BiocSingular)
+set.seed(1010101)
+sce.zeisel <- denoisePCA(sce.zeisel, technical=dec.zeisel, subset.row=top.hvgs)
+sce.zeisel <- runTSNE(sce.zeisel, dimred="PCA")
+ncol(reducedDim(sce.zeisel, "PCA"))
+# Clustering
+snn.gr <- buildKNNGraph(sce.zeisel, use.dimred="PCA")
+colLabels(sce.zeisel) <- factor(igraph::cluster_walktrap(snn.gr)$membership)
+
+table(colLabels(sce.zeisel))
+
+plotTSNE(sce.zeisel, colour_by="label")
+# Interpretation
+markers <- findMarkers(sce.zeisel, direction="up")
+marker.set <- markers[["1"]]
+head(marker.set[,1:8], 10)
+
+top.markers <- rownames(marker.set)[marker.set$Top <= 10]
+
+plotHeatmap(sce.zeisel, features = top.markers, order_columns_by = "label")
+
+library(pheatmap)
+logFCs <- getMarkerEffects(marker.set[1:50,])
+pheatmap(logFCs, breaks = seq(-5, 5, length.out=101))
+
 
