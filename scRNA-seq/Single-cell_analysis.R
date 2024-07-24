@@ -9,6 +9,7 @@ BiocManager::install("batchelor")
 BiocManager::install("bluster")
 BiocManager::install("ensembldb")
 install.packages("uwot")
+install.packages("dynamicTreeCut")
 library(uwot)
 library(SingleCellExperiment)
 library(scater)
@@ -288,3 +289,70 @@ gridExtra::grid.arrange(
   nrow=2,
   ncol=2
 )
+gridExtra::grid.arrange(
+  plotColData(unfiltered, x="sum", y="subsets_Mt_percent", 
+              colour_by = "discard") + scale_x_log10(),
+  plotColData(unfiltered, x="altexps_ERCC_percent", y="subsets_Mt_percent", 
+              colour_by = "discard"),
+  ncol=2
+)
+
+# Normalization
+library(scran)
+sce.416b <- computeSumFactors(sce.416b)
+sce.416b <- logNormCounts(sce.416b)
+summary(sizeFactors(sce.416b))
+plot(librarySizeFactors(sce.416b), sizeFactors(sce.416b), pch=16,
+     xlab = "Library size factors", ylab="Deconvolution factors", 
+     col = c("black","red")[grepl("induced", sce.416b$phenotype)+1],
+     log = "xy")
+# Variance modeling
+dec.416b <- modelGeneVarWithSpikes(sce.416b, "ERCC", block=sce.416b$block)
+chosen.hvgs <- getTopHVGs(dec.416b, prop=0.1)
+par(mfrow=c(1, 2))
+blocked.stats <- dec.416b$per.block
+for (i in colnames(blocked.stats)) {
+  current <- blocked.stats[[i]]
+  plot(current$mean, current$total, main=i, pch=16, cex=0.5,
+       xlab="Mean of log-expression", ylab="Variance of log-exxpression")
+  curfit <- metadata(current)
+  points(curfit$mean, curfit$var, col="red", pch=16)
+  curve(curfit$trend(x), col="dodgerblue", add=T, lwd=2)
+}
+# Batch correction
+library(limma)
+assay(sce.416b, "corrected") <- removeBatchEffect(logcounts(sce.416b), 
+                                                  design=model.matrix(~sce.416b$phenotype), 
+                                                  batch=sce.416b$block)
+
+# Dimensionality reduction
+sce.416b <- runPCA(sce.416b, ncomponent=10, subset_row=chosen.hvgs, 
+                   exprs_values="corrected", BSPARAM=BiocSingular::ExactParam())
+set.seed(1010)
+sce.416b <- runTSNE(sce.416b, dimred="PCA", perplexity=10)
+# Clustering
+my.dist <- dist(reducedDim(sce.416b, "PCA"))
+my.tree <- hclust(my.dist, method="ward.D2")
+library(dynamicTreeCut)
+my.clusters <- unname(cutreeDynamic(my.tree, distM=as.matrix(my.dist), minClusterSize = 10, verbose=0))
+colLabels(sce.416b) <- factor(my.clusters)
+table(Cluster=colLabels(sce.416b), Plate=sce.416b$block)
+table(Cluster=colLabels(sce.416b), Oncogene=sce.416b$phenotype)
+plotTSNE(sce.416b, colour_by="label")
+library(cluster)
+clust.col <- scater:::.get_palette("tableau10medium")
+sil <- silhouette(my.clusters, dist = my.dist)
+sil.cols <- clust.col[ifelse(sil[,3] > 0, sil[,1], sil[,2])]
+sil.cols <- sil.cols[order(-sil[,1], sil[,3])]
+plot(sil, main = paste(length(unique(my.clusters)), "clusters"), 
+     border=sil.cols, col=sil.cols, do.col.sort=F)
+
+# Interpretation
+markers <- findMarkers(sce.416b, my.clusters, block=sce.416b$block)
+marker.set <- markers[["1"]]
+head(marker.set, 10)
+top.markers <- rownames(marker.set)[marker.set$Top <= 10]
+plotHeatmap(sce.416b, features = top.markers, order_columns_by = "label", 
+            colour_columns_by = c("label", "block", "phenotype"), 
+            center=TRUE, symmetric=T, zlim=c(-5, 5))
+
