@@ -9,6 +9,8 @@ BiocManager::install("batchelor")
 BiocManager::install("bluster")
 BiocManager::install("ensembldb")
 BiocManager::install("org.Mm.eg.db")
+BiocManager::install("org.Hs.eg.db")
+BiocManager::install("DropletTestFiles")
 install.packages("uwot")
 install.packages("dynamicTreeCut")
 library(uwot)
@@ -16,6 +18,7 @@ library(SingleCellExperiment)
 library(scater)
 library(scuttle)
 library(ensembldb)
+library(DropletTestFiles)
 
 
 # Reading from tabular formats
@@ -438,4 +441,87 @@ library(pheatmap)
 logFCs <- getMarkerEffects(marker.set[1:50,])
 pheatmap(logFCs, breaks = seq(-5, 5, length.out=101))
 
+# Human pancreas (CEL-seq2)
+# Data loading
+library(scRNAseq)
+sce.grun <- GrunPancreasData()
 
+library(org.Hs.eg.db)
+gene.ids <- mapIds(org.Hs.eg.db, keys=rowData(sce.grun)$symbol, keytype="SYMBOL", column="ENSEMBL")
+keep <- !is.na(gene.ids) & !duplicated(gene.ids)
+sce.grun <- sce.grun[keep,]
+rownames(sce.grun) <- gene.ids[keep]
+
+# Quality control
+unfiltered <- sce.grun
+
+library(scater)
+stats <- perCellQCMetrics(sce.grun)
+
+qc <- quickPerCellQC(stats, percent_subsets="altexps_ERCC_percent", 
+                     batch=sce.grun$donor, subset=sce.grun$donor %in% c("D17", "D7", "D2"))
+
+sce.grun <- sce.grun[, !qc$discard]
+colData(unfiltered) <- cbind(colData(unfiltered), stats)
+unfiltered$discard <- qc$discard
+
+gridExtra::grid.arrange(
+  plotColData(unfiltered, x="donor", y="sum", colour_by = "discard") +
+    scale_y_log10() + ggtitle("Total count"), 
+  plotColData(unfiltered, x="donor", y="detected", colour_by = "discard") +
+    scale_y_log10() + ggtitle("Detected features"), 
+  plotColData(unfiltered, x="donor", y="altexps_ERCC_percent", 
+              colour_by = "discard") + ggtitle("ERCC percent"),
+  ncol = 2
+)
+colSums(as.matrix(qc), na.rm = T)
+
+# Normalization
+library(scran)
+set.seed(1000)
+clusters <- quickCluster(sce.grun)
+sce.grun <- computeSumFactors(sce.grun, clusters=clusters)
+sce.grun <- logNormCounts(sce.grun)
+
+summary(sizeFactors(sce.grun))
+
+plot(librarySizeFactors(sce.grun), sizeFactors(sce.grun), pch=16, 
+     xlab="Library size factors", ylab="Deconvolution factors", log="xy")
+
+# Variance modeling
+block <- paste0(sce.grun$sample, "_", sce.grun$donor)
+dec.grun <- modelGeneVarWithSpikes(sce.grun, spikes="ERCC", block=block)
+top.grun <- getTopHVGs(dec.grun, prop = 0.1)
+
+table(block)
+
+par(mfrow=c(6,3))
+blocked.stats <- dec.grun$per.block
+for (i in colnames(blocked.stats)) {
+  current <- blocked.stats[[i]]
+  plot(current$mean, current$total, main=i, pch=16, cex=0.5, 
+       xlab="Mean of log-expression", ylab="Variance of log-expression")
+  curfit <- metadata(current)
+  points(curfit$mean, curfit$var, col="red", pch=16)
+  curve(curfit$trend(x), col="dodgerblue", add=T, lwd=2)
+}
+
+# Data integration
+library(batchelor)
+set.seed(1001010)
+merged.grun <- fastMNN(sce.grun, subset.row=top.grun, batch=sce.grun$donor)
+metadata(merged.grun)$merge.info$lost.var
+# Dimensionality reduction
+set.seed(100111)
+merged.grun <- runTSNE(merged.grun, dimred="corrected")
+# Clustering
+snn.gr <- buildSNNGraph(merged.grun, use.dimred="corrected")
+colLabels(merged.grun) <- factor(igraph::cluster_walktrap(snn.gr)$membership)
+
+table(Cluster=colLabels(merged.grun), Donor=merged.grun$batch)
+
+gridExtra::grid.arrange(
+  plotTSNE(merged.grun, colour_by = "label"),
+  plotTSNE(merged.grun, colour_by = "batch"),
+  ncol=2
+)
