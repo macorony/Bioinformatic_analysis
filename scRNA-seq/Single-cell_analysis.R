@@ -46,23 +46,23 @@ sce <- read10xCounts("data/tenx-pbmc4k/raw_gene_bc_matrices/GRCh38/")
 sce$Barcode
 
 # Construct SingleCellExperiment object
-mat <- read.delim("data/E-MTAB-5522/counts_Calero_20160113.tsv", header = T, row.names = 1, check.names = F)
+mat <- read.delim("D:/WorkFiles/Computational/Data/E-MTAB-5522/counts_Calero_20160113.tsv", header = T, row.names = 1, check.names = F)
 spike.mat <- mat[grepl("^ERCC-", rownames(mat)), ]
+mat <- mat[grepl("^ENSMUSG", rownames(mat)),]
 gene.length <- mat[, 1]
 mat <- as.matrix(mat[,-1])
+dim(mat)
 sce <- SingleCellExperiment(assay = list(counts = mat))
-# Another Example
-ncells <- 100
-u <- matrix(rpois(20000, 5), ncol=ncells)
-v <- log2(u + 1)
-pca <- matrix(runif(ncells*5), ncells)
-tsne <- matrix(rnorm(ncells*2), ncells)
-sce <- SingleCellExperiment(assays = list(counts=u, logcounts=v), 
-                            reducedDims = SimpleList(PCA=pca, tSNE=tsne))
-assayNames(sce)
+sce <- scuttle::logNormCounts(sce)
+counts_100 <- counts(sce) + 100
+assay(sce, "counts_100") <- counts_100
+assays(sce)
+# keeping the first two assays
+assays(sce) <- assays(sce)[1:2]
+assays(sce)
 
 # Metadata
-coldata <- read.delim("data/E-MTAB-5522/E-MTAB-5522.sdrf.txt", check.names = F)
+coldata <- read.delim("D:/WorkFiles/Computational/Data/E-MTAB-5522/E-MTAB-5522.sdrf.txt", check.names = F)
 coldata <- coldata[coldata[, "Derived Array Data File"] == "counts_Calero_20160113.tsv", ]
 coldata <- DataFrame(genotype=coldata[, "Characteristics[genotype]"], 
                      phenotype=coldata[, "Characteristics[phenotype]"], 
@@ -71,7 +71,7 @@ coldata <- DataFrame(genotype=coldata[, "Characteristics[genotype]"],
 sce <- SingleCellExperiment(assays = list(counts=mat), colData=coldata)
 colData(sce)
 head(sce$phenotype)
-head(sce$Factor.Value.phenotype.)
+head(sce$Factor.Value.phenotype)
 
 sce <- SingleCellExperiment(list(counts=mat))
 colData(sce) <- coldata
@@ -79,7 +79,7 @@ sce
 sce <- SingleCellExperiment(list(counts=mat))
 sce$phenotype <- coldata$phenotype
 colData(sce)
-# rows of the coldata refer to the same cells as the columns of the count matrix
+# Rows of the coldata refer to the same cells as the columns of the count matrix
 identical(rownames(coldata), colnames(mat))
 
 sce <- scuttle::addPerCellQC(sce)
@@ -88,6 +88,7 @@ colData(sce)
 rowData(sce)$Length <- gene.length
 rowData(sce)
 rowRanges(sce)
+ 
 
 # subsetting and combining
 first.10 <- sce[, 1:10]
