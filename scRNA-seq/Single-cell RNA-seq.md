@@ -21,6 +21,9 @@ Single-cell analysis characterize individual cells, allowing their clustering an
     2. Gene set enrichment analysis
     3. Compositional analysis
     4. Inferring perturbation effects
+
+![Schematic of a typical scRNA-seq analysis workflow](Images/workflow.png)
+
 # Sample preparation protocols
 [credit resource] (https://www.singlecellcourse.org/introduction-to-single-cell-rna-seq.html#overview-of-single-cell-rna-seq)
 there are currently a wide diversity of protocols for preparing scRNA-seq data, which can be categorized mainly based on the two most important aspects of cell capture or isolation and transcription quantification.
