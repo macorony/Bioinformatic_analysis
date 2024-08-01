@@ -22,7 +22,7 @@ Single-cell analysis characterize individual cells, allowing their clustering an
     3. Compositional analysis
     4. Inferring perturbation effects
 
-[Schematic of a typical scRNA-seq analysis workflow](Images/workflow.png)
+![Schematic of a typical scRNA-seq analysis workflow](Images/workflow.png)
 
 
 

@@ -34,6 +34,36 @@ pbmc <- CreateSeuratObject(counts= txi$counts, min.cells=3, min.features=200, pr
 ```
 
 ## The SingleCellExperiment class
+## Quality control
+1. Low-quality can be resulted from cell damage during dissociation or failure in library preparation. These can be identified with low total counts, few expressed genes and high mitochondrial or spike-in proportions. 
+    1. The damaged cells form their own distinct clusters because of increased mitochondrial proportions or enrichment for nuclear RNAs after cell damage. 
+    2. They distort the characterization of population heterogeneity during variance estimation or principal component analysis. The first few principal component will capture differences in quality rather than biology. Similarly, genes with the largest variances will be driven by differences between low- and high-quality cells. 
+    3. They contain genes that appear to be strongly "upregulated" due to aggressive scaling to normalize for small library sizes. Increased scaling in low-quality libraries transforms small counts for these transcripts in large normalized expression values, resulting in upregulation compared to other cells.
+2. QC metrics
+Several common QC metrics are used to identify low-quality cells based on their expression profiles.
+    1. The libary size. Cells with small library sizes are of low quality as the RNA has been lost at some point during preparation. 
+    2. The number of expressed genes. Cells with very few expressed genes are likely to be of poor quality as the diverse transcript population has not been captured. 
+    3. The proportion of reads mapped to spike-in transcripts is calculated relative to the total count across all features for each cell. As the same amount of spike-in RNA should have been added to each cell, any enrichment in spike-in counts is symptomatic of loss of endogenous RNA. Thus, high proportions are indicative of poor-quality cells. 
+    4. In the absence of spike-in transcripts, the proportion of reads mapped to genes in the mitochondrial genome can be used. High proportions are indicative of poor-quality cells.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

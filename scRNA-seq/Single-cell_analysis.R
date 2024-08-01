@@ -526,3 +526,8 @@ gridExtra::grid.arrange(
   plotTSNE(merged.grun, colour_by = "batch"),
   ncol=2
 )
+
+# Droplet-based retina dataset
+library(scRNAseq)
+sce <- MacoskoRetinaData()
+
