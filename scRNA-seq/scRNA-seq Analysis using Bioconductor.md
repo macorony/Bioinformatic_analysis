@@ -45,6 +45,20 @@ Several common QC metrics are used to identify low-quality cells based on their 
     2. The number of expressed genes. Cells with very few expressed genes are likely to be of poor quality as the diverse transcript population has not been captured. 
     3. The proportion of reads mapped to spike-in transcripts is calculated relative to the total count across all features for each cell. As the same amount of spike-in RNA should have been added to each cell, any enrichment in spike-in counts is symptomatic of loss of endogenous RNA. Thus, high proportions are indicative of poor-quality cells. 
     4. In the absence of spike-in transcripts, the proportion of reads mapped to genes in the mitochondrial genome can be used. High proportions are indicative of poor-quality cells.
+3. Using QC metrics to identify low-quality cells
+    1. Using fixed threshold. We may consider cells to be low quality if the library size is below 100000 reads; expresses fewer than 5000 genes; have spike-in proportion above 10% or mitochondrial proportions above 10%. Thresholds for read count-based data are simply not applicable for UMI-based data, and vice versa. Differences in mitochondrial activity or total RNA content require constant adjustment of mitochondrial and spike-in thresholds.
+    2. Using adaptive threshold. 
+        1. Identifying outliers
+        To obtain an adaptive threshold, we assume that most of the dataset consists of high-quality cells. We then identify cell that are outlier for the various QC metrics based on the median absolute deviation (MAD) from the median value of each metric across all cells. Specifically, a value is considered an outlier if it is more than 3 MADs from the median in the problematic direction. 
+        2. Assumptions of outlier detection
+        Outlier detection assumes that most cells are of acceptable quality. Another assumption is that the QC metrics are independent of the biological state of each cell.
+        3. Considering experimental factors
+4. Checking diagnostic plots
+5. Removing low-quality cells
+6. Marking low-quality cells 
+
+
+
 
 
 

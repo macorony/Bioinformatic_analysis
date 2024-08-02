@@ -527,7 +527,9 @@ gridExtra::grid.arrange(
   ncol=2
 )
 
-# Droplet-based retina dataset
+
+
+# Quality control 
 library(scRNAseq)
 sce <- MacoskoRetinaData()
 
