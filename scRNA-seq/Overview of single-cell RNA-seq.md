@@ -65,7 +65,10 @@ Most scRNA-seq technologies generate read sequences containing three key pieces 
 2. To normalize count matrix across different cells to eliminate cell-specific biases. 
 3. To select a subset of features of interests for downstream analysis.
 4. To apply dimensionality reduction analysis. 
-5. To cluster cells into groups according to similarities in their normalized expression profiles.  
+5. To cluster cells into groups according to similarities in their normalized expression profiles.
+
+
+
 
 
 

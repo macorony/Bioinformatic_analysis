@@ -34,6 +34,7 @@ pbmc <- CreateSeuratObject(counts= txi$counts, min.cells=3, min.features=200, pr
 ```
 
 ## The SingleCellExperiment class
+
 ## Quality control
 1. Low-quality can be resulted from cell damage during dissociation or failure in library preparation. These can be identified with low total counts, few expressed genes and high mitochondrial or spike-in proportions. 
     1. The damaged cells form their own distinct clusters because of increased mitochondrial proportions or enrichment for nuclear RNAs after cell damage. 
@@ -55,8 +56,13 @@ Several common QC metrics are used to identify low-quality cells based on their 
         3. Considering experimental factors
 4. Checking diagnostic plots
 5. Removing low-quality cells
-6. Marking low-quality cells 
+6. Marking low-quality cells
 
+## Normalization
+Systematic differences in sequencing coverage between libraries are often observed in single-cell sequencing data. They typically arise from technical differences in cDNA capture or PCR amplification efficiency across cells. Normalization aims to remove these differences such that they do not interfere with comparisions of the expression profiles between cells. This ensures that any observed heterogeniety or differential expression within the cell populuation are driven by biology and not technical biases. 
+1. Library size normalization
+2. Normalization by deconvolution
+3. Normalization by spike-ins
 
 
 
