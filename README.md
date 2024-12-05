@@ -1,2 +1,19 @@
-# Bioinformatic analysis
-A comprehensive repository aimed at hands-on practice in bioinformatics analysis. This repository will encompass a wide array of techniques crucial in genomic studies, including RNA-seq, DNA-seq, copy number variation analysis, and single-cell analysis. Its purpose is to hone my skills, explore diverse datasets, and gain proficiency in interpreting genomic data.
+# Bioinformatics Repository
+
+## Overview
+This repository contains workflows and tools for:
+- RNA-seq Analysis
+- Whole Genome Analysis
+- Single-cell RNA-seq Analysis
+- Survival Analysis
+- DNA Methylation Analysis
+
+## Features
+- End-to-end pipelines for preprocessing, statistical analysis, and visualization.
+- Modularized code for customization.
+- Integration with popular bioinformatics tools and databases.
+
+## Usage
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/bioinformatics-repo.git
